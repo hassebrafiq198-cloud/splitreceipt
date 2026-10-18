@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SplitReceipt</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--tx:#16181d;--mu:#636a76;--bd:#e4e5e9;--ac:#3d3df5;--acx:#fff;--ok:#0f7b4f;--er:#c0262d;--sh:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101216;--card:#181b21;--tx:#eef0f4;--mu:#9aa1ad;--bd:#2a2e37;--ac:#8c8cff;--acx:#101216;--ok:#4cc38f;--er:#ff7b80;--sh:none}}
+:root[data-theme="dark"]{--bg:#101216;--card:#181b21;--tx:#eef0f4;--mu:#9aa1ad;--bd:#2a2e37;--ac:#8c8cff;--acx:#101216;--ok:#4cc38f;--er:#ff7b80;--sh:none}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:20px 16px 80px}
+h1{font-size:26px;letter-spacing:-.02em;margin:8px 0 2px}h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:0 0 12px}
+.sub{color:var(--mu);margin:0 0 18px}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;background:color-mix(in srgb,var(--ac) 14%,transparent);color:var(--ac);font-weight:600}
+section{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin:14px 0;box-shadow:var(--sh)}
+label{display:block;font-size:13px;color:var(--mu);margin-bottom:4px}
+input,select{width:100%;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;min-height:44px}
+input:disabled{opacity:.7}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}
+:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+button{font:inherit;cursor:pointer;min-height:44px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 14px}
+button.p{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}
+button:disabled{opacity:.5;cursor:not-allowed}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.seg button{flex:1;min-width:70px;padding:8px 6px;font-size:14px}
+.seg button[aria-pressed=true]{background:var(--ac);color:var(--acx);border-color:var(--ac)}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:8px}.row .x{width:44px;padding:0;flex:none;color:var(--er)}
+.item{border:1px solid var(--bd);border-radius:12px;padding:10px;margin-bottom:10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.chips button{min-height:36px;padding:4px 12px;font-size:14px;border-radius:99px}
+.chips button[aria-pressed=true]{background:var(--ac);color:var(--acx);border-color:var(--ac)}
+.err{color:var(--er);font-size:14px;margin:4px 0}.note{color:var(--mu);font-size:13px;margin-top:8px}
+.card{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:12px 0;border-bottom:1px solid var(--bd)}
+.card:last-child{border:0}.card b.t{font-size:22px;font-variant-numeric:tabular-nums}.card small{color:var(--mu);display:block}
+.tot{display:flex;justify-content:space-between;font-weight:700;padding-top:10px}
+#rimg{width:100%;border:1px solid var(--bd);border-radius:8px;background:#fff;display:block}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.acts button{flex:1}
+.toast{color:var(--ok);font-size:14px;margin-top:8px;min-height:20px}
+@media(prefers-reduced-motion:no-preference){.row,.item,.card{animation:in .18s ease-out}@keyframes in{from{opacity:0;transform:translateY(6px)}}button{transition:background .15s,transform .1s}button:active{transform:scale(.98)}}
+@media print{body *{visibility:hidden}#rimg,#rimg *{visibility:visible}#rimg{position:absolute;left:0;top:0;width:100%;border:0}}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;gap:8px;align-items:center;padding:10px 16px;background:var(--card);border-bottom:1px solid var(--bd)}
+.top b{flex:1;font-size:17px;letter-spacing:-.01em}.top .st{font-size:13px;min-width:60px;text-align:right}
+#auth{max-width:400px;margin:0 auto;padding:40px 16px}[hidden]{display:none!important}
+#drawer{position:fixed;inset:0 auto 0 0;width:min(86vw,340px);background:var(--card);border-right:1px solid var(--bd);z-index:40;transform:translateX(-102%);visibility:hidden;padding:16px;overflow:auto}
+#drawer.open{transform:none;visibility:visible}#scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:30}
+.h{display:flex;gap:6px;margin-bottom:8px}.h .o{flex:1;text-align:left}.h small{display:block;color:var(--mu)}
+@media(prefers-reduced-motion:no-preference){#drawer{transition:transform .2s ease}}
+.sb{width:100%;min-height:52px;margin-bottom:12px;font-weight:600;border-radius:10px}
+dialog{border:1px solid var(--bd);border-radius:16px;background:var(--card);color:var(--tx);width:calc(100% - 32px);max-width:420px;padding:20px}
+.pl{border:1px solid var(--bd);border-radius:12px;padding:14px;margin:10px 0}.pl.best{border-color:var(--ac)}
+a.btn{display:block;text-align:center;text-decoration:none;margin-top:8px;padding:11px;border-radius:10px;background:var(--ac);color:var(--acx);font-weight:600}
+dialog{max-height:90vh;overflow:auto}dialog input{margin-bottom:6px}select{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px;min-height:44px}
+</style></head><body>
+<div id="auth" hidden><h1>SplitReceipt</h1><p class="sub">Split bills fairly and share a clean receipt.</p>
+<section id="abox"><div id="soc"><button class="sb" data-s="google">Continue with Google</button><button class="sb" data-s="facebook">Continue with Facebook</button><button class="sb" data-s="email">Continue with Email</button></div><div id="emform" hidden><button id="bk" style="border:0;background:none;color:var(--ac);padding:0;margin-bottom:10px">← Other sign-in options</button><div class="seg" id="atabs"><button data-m="in" aria-pressed="true">Sign in</button><button data-m="up" aria-pressed="false">Create account</button></div>
+<div id="emw"><label for="em">Email</label><input id="em" type="email" autocomplete="email"></div>
+<div style="margin-top:12px"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"></div>
+<button class="p" id="go" style="width:100%;margin-top:14px">Sign in</button>
+<button id="fg" style="width:100%;margin-top:8px;border:0;background:none;color:var(--ac)">Forgot password?</button>
+</div><div class="err" id="amsg" role="alert"></div></section></div>
+<div id="app" hidden>
+<header class="top"><button id="menu" aria-label="Open bill history" aria-expanded="false">☰</button><b>SplitReceipt</b><span class="st" id="st" role="status"></span><button class="p" id="new">+ New</button></header>
+<aside id="drawer" aria-label="Bill history"><div class="row"><b style="flex:1">History</b><button id="dclose" aria-label="Close history">✕</button></div><p class="note" id="who"></p><div class="note" id="plan"></div><button id="vp" style="width:100%;margin:8px 0 12px">Plan &amp; payments</button><button id="adm" hidden style="width:100%;margin-bottom:12px">Admin panel</button><div id="hist"></div><button id="out" style="width:100%;margin-top:12px">Sign out</button></aside><div id="scrim" hidden></div>
+<div id="gate" hidden style="max-width:640px;margin:0 auto;padding:24px 16px"><h1>Choose a plan to start</h1><p class="sub">SplitReceipt is a paid service. Pick a plan to unlock bill splitting, saved history and receipts.</p><div id="gb"></div><p class="note" id="gnote"></p></div>
+<main>
+<h1>Split the bill</h1><p class="sub">Enter the bill, add people, and get a clean receipt. Your bills save to your account automatically.</p>
+
+<section><label for="cur" style="font-size:15px;color:var(--tx);font-weight:600">Currency for this bill</label><select id="cur"><option value="USD">USD ($) – US dollar</option><option value="PKR">PKR (Rs) – Pakistani rupee</option><option value="EUR">EUR (€) – Euro</option><option value="GBP">GBP (£) – British pound</option><option value="INR">INR (₹) – Indian rupee</option><option value="AED">AED – UAE dirham</option><option value="SAR">SAR – Saudi riyal</option><option value="CAD">CAD (CA$) – Canadian dollar</option><option value="AUD">AUD (A$) – Australian dollar</option></select></section>
+<section><h2>1 · Bill</h2><div class="g">
+<div class="full"><label for="title">Merchant or title</label><input id="title" data-k="title" placeholder="Joe’s Pizza" value=""></div>
+<div><label for="date">Date</label><input id="date" type="date" data-k="date"></div>
+<div><label for="subtotal">Subtotal (<span class="cs">$</span>)</label><input id="subtotal" data-k="subtotal" inputmode="decimal" placeholder="0.00"></div>
+<div><label for="tax">Tax (<span class="cs">$</span>)</label><input id="tax" data-k="tax" inputmode="decimal" placeholder="0.00"></div>
+<div><label for="tip">Tip (<span class="cs">$</span>)</label><input id="tip" data-k="tip" inputmode="decimal" placeholder="0.00"></div>
+<div><label for="discount">Discount (<span class="cs">$</span>, optional)</label><input id="discount" data-k="discount" inputmode="decimal" placeholder="0.00"></div>
+<div><label for="fees">Other fees (<span class="cs">$</span>, optional)</label><input id="fees" data-k="fees" inputmode="decimal" placeholder="0.00"></div>
+</div></section>
+
+<section><h2>2 · How to split</h2>
+<div class="seg" id="mode" role="group" aria-label="Split method"></div>
+<div id="items"></div>
+<div id="people"></div>
+<button id="addp">+ Add person</button>
+<div style="margin-top:16px"><label>Divide tax, tip and fees</label>
+<div class="seg" id="tmode" role="group" aria-label="Tax and tip method"></div></div>
+</section>
+
+<section aria-live="polite"><h2>3 · Who owes what</h2><div id="errs"></div><div id="res"></div><p class="note" id="rnote"></p></section>
+
+<section><h2>4 · Receipt</h2>
+<button class="p" id="prev">Preview receipt</button>
+<div id="rwrap" hidden style="margin-top:12px"><img id="rimg" alt="Receipt preview">
+<div class="acts"><button class="p" id="dl">Download PNG</button><button id="sh">Share</button><button id="pr">Print / PDF</button></div>
+<div class="toast" id="toast" role="status"></div>
+<p class="note">If a download is blocked in your browser, press and hold the image to save it. This receipt is a split summary only. It does not confirm any payment.</p></div></section>
+</main></div>
+<dialog id="plans" aria-labelledby="pt"><h2 id="pt">Choose a plan</h2><div id="pb"></div><button id="pc" style="width:100%;margin-top:6px">Close</button></dialog>
+<dialog id="paydlg" aria-labelledby="ph"><h2 id="ph" style="font-size:20px;text-transform:none;letter-spacing:0;color:var(--tx)">Pay with JazzCash</h2><p><b id="pplan"></b></p>
+<p class="note" style="color:var(--tx)">1. Open JazzCash and send exactly <b id="pamt"></b> to the number below.<br>2. Come back here and submit your payment details.</p>
+<div class="pl" style="text-align:center"><div class="note">JazzCash number</div><div style="font-size:26px;font-weight:700">0329-6599619</div><button id="pcopy" style="margin-top:6px">Copy number</button><div class="toast" id="pcm" role="status"></div></div>
+<p class="note"><b>Your plan is activated only after an admin manually checks your payment.</b> Nothing is activated automatically. Never share your JazzCash PIN, OTP or password. We never ask for them.</p>
+<label for="pem">Account email</label><input id="pem" type="email">
+<label for="pref">Transaction / reference number (optional)</label><input id="pref" maxlength="60">
+<label for="pdate">Payment date</label><input id="pdate" type="date">
+<label for="pfile">Payment screenshot (JPG, PNG or WebP, up to 3 MB)</label><input id="pfile" type="file" accept="image/jpeg,image/png,image/webp">
+<img id="pprev" alt="Screenshot preview" hidden style="max-width:100%;max-height:200px;margin-top:8px;border-radius:8px">
+<div class="err" id="pmsg" role="alert"></div>
+<div class="acts"><button id="pcancel">Cancel</button><button class="p" id="psub">Submit payment details</button></div></dialog>
+<dialog id="admdlg" aria-labelledby="at" style="max-width:720px"><div class="row"><h2 id="at" style="flex:1;margin:0">Admin panel</h2><button id="acl" aria-label="Close admin panel">✕</button></div>
+<div class="seg" id="atab2"><button data-t="pay" aria-pressed="true">Payments</button><button data-t="users" aria-pressed="false">Users</button><button data-t="prices" aria-pressed="false">Prices</button><button data-t="audit" aria-pressed="false">Audit</button></div>
+<div id="am" role="alert" class="err"></div><div id="ab"></div></dialog>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const {SUPABASE_URL='',SUPABASE_KEY='',SUPPORT_EMAIL='',CHECKOUT={week:'',month:'',year:''}}=window.CFG||{};
+
+const $=s=>document.querySelector(s);let uid=1;
+const CUR={USD:{s:'$'},PKR:{s:'Rs '},EUR:{s:'€'},GBP:{s:'£'},INR:{s:'₹'},AED:{s:'AED '},SAR:{s:'SAR '},CAD:{s:'CA$'},AUD:{s:'A$'}};
+const S={cur:'USD',title:'',date:'',subtotal:'',tax:'',tip:'',discount:'',fees:'',mode:'equal',tmode:'prop',people:[],items:[]};
+const c$=v=>Math.round((parseFloat(String(v).replace(/[$,]/g,''))||0)*100);
+const f$=(c,k)=>(c<0?'-':'')+CUR[k||S.cur].s+(Math.abs(c)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const nm=(p,i)=>p.name.trim()||('Person '+(i+1));
+function fdate(d){if(!d)return'';const[y,m,dd]=d.split('-');return['USD','CAD'].includes(S.cur)?`${m}/${dd}/${y}`:`${dd}/${m}/${y}`}
+function alloc(t,w){const n=w.length;if(!n)return{a:[],x:[]};let s=w.reduce((a,b)=>a+b,0);if(s<=0){w=w.map(()=>1);s=n}
+const raw=w.map(v=>t*v/s),fl=raw.map(Math.floor);const left=t-fl.reduce((a,b)=>a+b,0);
+const o=raw.map((r,i)=>[r-fl[i],i]).sort((p,q)=>q[0]-p[0]||p[1]-q[1]);const x=[];
+for(let k=0;k<left;k++){fl[o[k][1]]++;x.push(o[k][1])}return{a:fl,x}}
+let R=null;
+function compute(){const P=S.people,n=P.length,er=[],ex=new Set();let sub=0,ps=P.map(()=>0);
+const mark=(x,l)=>x.forEach(i=>ex.add(nm(P[i],i)));
+if(!n)er.push('Add at least one person.');
+if(S.mode==='items'){S.items.forEach((it,k)=>{const pr=c$(it.price);sub+=pr;const ids=it.who.filter(id=>P.some(p=>p.id===id));
+ if(!ids.length){if(pr)er.push(`Assign “${it.name||'Item '+(k+1)}” to at least one person.`);return}
+ const r=alloc(pr,ids.map(()=>1));r.a.forEach((v,j)=>ps[P.findIndex(p=>p.id===ids[j])]+=v);mark(r.x.map(j=>P.findIndex(p=>p.id===ids[j])))});
+ if(!S.items.length)er.push('Add at least one item.')}
+else{sub=c$(S.subtotal);
+ if(S.mode==='equal'&&n){const r=alloc(sub,P.map(()=>1));ps=r.a;mark(r.x)}
+ if(S.mode==='percent'&&n){const w=P.map(p=>Math.round((parseFloat(p.pct)||0)*100));const sw=w.reduce((a,b)=>a+b,0);
+  if(sw!==10000)er.push(`Percentages add up to ${(sw/100).toFixed(2)}%. They must total 100%.`);else{const r=alloc(sub,w);ps=r.a;mark(r.x)}}
+ if(S.mode==='custom'&&n){ps=P.map(p=>c$(p.amt));const d=sub-ps.reduce((a,b)=>a+b,0);if(d!==0)er.push(`Custom amounts are ${f$(Math.abs(d))} ${d>0?'under':'over'} the subtotal.`)}}
+const tax=c$(S.tax),tip=c$(S.tip),fee=c$(S.fees),dis=c$(S.discount);
+[['Tax',tax],['Tip',tip],['Fees',fee],['Discount',dis]].forEach(([l,v])=>{if(v<0)er.push(l+' can’t be negative.')});
+if(dis>sub+tax+tip+fee&&sub)er.push('Discount is larger than the bill.');
+const total=sub-dis+tax+tip+fee;if(total<0)er.push('The total can’t be negative.');
+if(sub<=0&&!er.length)er.push('Enter a subtotal greater than $0.');
+const w=S.tmode==='prop'?ps:P.map(()=>1);const out=P.map(()=>({tax:0,tip:0,fee:0,dis:0}));
+if(n&&!er.length)[['tax',tax],['tip',tip],['fee',fee],['dis',dis]].forEach(([k,v])=>{const r=alloc(v,w);r.a.forEach((a,i)=>out[i][k]=a);mark(r.x)});
+const rows=P.map((p,i)=>({name:nm(p,i),sub:ps[i],...out[i],tot:ps[i]+out[i].tax+out[i].tip+out[i].fee-out[i].dis}));
+return{er,rows,sub,tax,tip,fee,dis,total,ex:[...ex]}}
+function esum(){R=compute();sched();$('#errs').innerHTML=R.er.map(e=>`<div class="err" role="alert">${esc(e)}</div>`).join('');
+const ok=!R.er.length;$('#res').innerHTML=R.rows.map(r=>`<div class="card"><div><b>${esc(r.name)}</b><small>Items ${f$(r.sub)} · Tax ${f$(r.tax)} · Tip ${f$(r.tip)}${r.fee?' · Fees '+f$(r.fee):''}${r.dis?' · Disc −'+f$(r.dis):''}</small></div><b class="t">${ok?f$(r.tot):'—'}</b></div>`).join('')+(ok?`<div class="tot"><span>Bill total</span><span>${f$(R.total)}</span></div>`:'');
+$('#rnote').textContent=ok?(R.ex.length?`Rounding: leftover cents were given one at a time to ${R.ex.join(', ')} (largest remainder first, then list order). Shares add up exactly to ${f$(R.total)}.`:`Shares add up exactly to ${f$(R.total)}.`):'';
+$('#prev').disabled=!ok;if(!ok)$('#rwrap').hidden=true}
+function seg(el,opts,key,cb){el.innerHTML=opts.map(([v,l])=>`<button aria-pressed="${S[key]===v}" data-v="${v}">${l}</button>`).join('');
+el.onclick=e=>{const b=e.target.closest('button');if(!b)return;S[key]=b.dataset.v;seg(el,opts,key,cb);cb()}}
+function rp(){$('#people').innerHTML=S.people.map((p,i)=>`<div class="row"><input aria-label="Name of person ${i+1}" data-p="${p.id}" data-f="name" placeholder="Person ${i+1}" value="${esc(p.name)}">${S.mode==='custom'?`<input aria-label="Amount" style="max-width:110px" inputmode="decimal" placeholder="${CUR[S.cur].s.trim()}0.00" data-p="${p.id}" data-f="amt" value="${esc(p.amt)}">`:''}${S.mode==='percent'?`<input aria-label="Percent" style="max-width:100px" inputmode="decimal" placeholder="%" data-p="${p.id}" data-f="pct" value="${esc(p.pct)}">`:''}<button class="x" aria-label="Remove ${esc(nm(p,i))}" data-rm="${p.id}">✕</button></div>`).join('')||'<p class="note">No people yet.</p>'}
+function ri(){const on=S.mode==='items';$('#items').hidden=!on;$('#subtotal').disabled=on;
+if(on)$('#subtotal').value=(R?(R.sub/100).toFixed(2):'');
+$('#items').innerHTML=on?S.items.map((it,k)=>`<div class="item"><div class="row" style="margin:0"><input aria-label="Item name" data-i="${it.id}" data-f="name" placeholder="Item ${k+1}" value="${esc(it.name)}"><input aria-label="Item price" style="max-width:100px" inputmode="decimal" placeholder="${CUR[S.cur].s.trim()}0.00" data-i="${it.id}" data-f="price" value="${esc(it.price)}"><button class="x" aria-label="Remove item" data-rmi="${it.id}">✕</button></div><div class="chips">${S.people.map((p,i)=>`<button aria-pressed="${it.who.includes(p.id)}" data-t="${it.id}:${p.id}">${esc(nm(p,i))}</button>`).join('')}</div></div>`).join('')+'<button id="addi" style="margin-bottom:12px">+ Add item</button>':''}
+function modes(){seg($('#mode'),[['equal','Equal'],['custom','Custom amount'],['percent','% Percent'],['items','By item']],'mode',()=>{rp();esum();ri()})}
+document.addEventListener('input',e=>{const t=e.target,k=t.dataset.k;
+if(k){S[k]=t.value;esum();return}
+if(t.dataset.p){S.people.find(p=>p.id==t.dataset.p)[t.dataset.f]=t.value;esum();if(t.dataset.f==='name')ri2();return}
+if(t.dataset.i){S.items.find(p=>p.id==t.dataset.i)[t.dataset.f]=t.value;esum();if(S.mode==='items')$('#subtotal').value=(R.sub/100).toFixed(2)}});
+function ri2(){document.querySelectorAll('.chips button').forEach(b=>{const[,pid]=b.dataset.t.split(':');const i=S.people.findIndex(p=>p.id==pid);if(i>=0)b.textContent=nm(S.people[i],i)})}
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+if(t.id==='addp'){S.people.push({id:uid++,name:'',amt:'',pct:''});rp();ri();esum();const q=document.querySelectorAll('#people input[data-f=name]');q[q.length-1].focus()}
+else if(t.dataset.rm){S.people=S.people.filter(p=>p.id!=t.dataset.rm);S.items.forEach(it=>it.who=it.who.filter(w=>w!=t.dataset.rm));rp();ri();esum()}
+else if(t.id==='addi'){S.items.push({id:uid++,name:'',price:'',who:S.people.map(p=>p.id)});ri();esum()}
+else if(t.dataset.rmi){S.items=S.items.filter(i=>i.id!=t.dataset.rmi);ri();esum()}
+else if(t.dataset.t){const[a,b]=t.dataset.t.split(':');const it=S.items.find(i=>i.id==a),pid=+b;it.who=it.who.includes(pid)?it.who.filter(w=>w!==pid):[...it.who,pid];ri();esum()}});
+function draw(){const W=720,sc=2,L=40,Rr=W-40,lines=[];const rows=R.rows;
+const hasItems=S.mode==='items'&&S.items.length;
+let H=170+(hasItems?S.items.length*34+50:0)+260+rows.length*58+(R.ex.length?60:0)+60;
+const c=document.createElement('canvas');c.width=W*sc;c.height=H*sc;const x=c.getContext('2d');x.scale(sc,sc);
+x.fillStyle='#fff';x.fillRect(0,0,W,H);x.fillStyle='#16181d';x.textBaseline='alphabetic';
+const ft=(s,w,z)=>x.font=`${w} ${z}px -apple-system,"Segoe UI",Roboto,Arial,sans-serif`;
+let y=70;ft(0,700,32);x.textAlign='left';x.fillText((S.title.trim()||'Split bill').slice(0,34),L,y);
+y+=30;ft(0,400,18);x.fillStyle='#636a76';x.fillText((fdate(S.date)||fdate(new Date().toISOString().slice(0,10)))+' · '+S.cur,L,y);
+x.textAlign='right';x.fillText(rows.length+' people',Rr,y);x.textAlign='left';
+const rule=()=>{y+=18;x.strokeStyle='#e4e5e9';x.lineWidth=1;x.beginPath();x.moveTo(L,y);x.lineTo(Rr,y);x.stroke();y+=14};
+const line=(a,b,bold,col)=>{y+=28;ft(0,bold?700:400,bold?22:18);x.fillStyle=col||'#16181d';x.textAlign='left';x.fillText(String(a).slice(0,36),L,y);x.textAlign='right';x.fillText(b,Rr,y);x.textAlign='left'};
+rule();
+if(hasItems){ft(0,700,14);x.fillStyle='#636a76';y+=16;x.fillText('ITEMS',L,y);S.items.forEach((it,k)=>{const who=it.who.map(id=>{const i=S.people.findIndex(p=>p.id===id);return i>=0?nm(S.people[i],i):null}).filter(Boolean);line((it.name||'Item '+(k+1))+(who.length?' ('+who.join(', ')+')':''),f$(c$(it.price)))});rule()}
+line('Subtotal',f$(R.sub));if(R.dis)line('Discount','−'+f$(R.dis));if(R.tax)line('Tax',f$(R.tax));if(R.tip)line('Tip',f$(R.tip));if(R.fee)line('Fees',f$(R.fee));
+y+=6;line('Total',f$(R.total),true);rule();
+ft(0,700,14);x.fillStyle='#636a76';y+=16;x.fillText('AMOUNT DUE PER PERSON',L,y);
+rows.forEach(r=>{line(r.name,f$(r.tot),true,'#3d3df5');y+=2;ft(0,400,14);x.fillStyle='#636a76';x.fillText(`Items ${f$(r.sub)} · Tax ${f$(r.tax)} · Tip ${f$(r.tip)}`,L,y+18);y+=12});
+if(R.ex.length){y+=34;ft(0,400,13);x.fillStyle='#636a76';x.fillText('Extra cent(s) from rounding: '+R.ex.join(', ').slice(0,70),L,y)}
+y+=40;ft(0,400,13);x.fillStyle='#8a909b';x.fillText('Split summary only. Not a payment confirmation.',L,y);
+const o=document.createElement('canvas');o.width=c.width;o.height=(y+30)*sc;o.getContext('2d').drawImage(c,0,0);return o}
+let cv=null;
+$('#prev').onclick=()=>{if(R.er.length)return;cv=draw();$('#rimg').src=cv.toDataURL('image/png');$('#rwrap').hidden=false;$('#rwrap').scrollIntoView({behavior:'smooth',block:'nearest'})};
+const fname=()=>((S.title.trim()||'receipt').replace(/[^\w]+/g,'-').toLowerCase()+'.png');
+const toast=m=>{$('#toast').textContent=m;setTimeout(()=>$('#toast').textContent='',3500)};
+$('#dl').onclick=()=>cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fname();document.body.appendChild(a);a.click();a.remove();toast('Receipt saved to your downloads.')});
+$('#sh').onclick=()=>cv.toBlob(async b=>{const f=new File([b],fname(),{type:'image/png'});try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'Receipt'});toast('Shared.')}else toast('Sharing isn’t supported here. Use Download or press and hold the image.')}catch(e){}});
+$('#pr').onclick=()=>window.print();
+$('#cur').onchange=e=>{S.cur=e.target.value;const s=CUR[S.cur].s.trim();document.querySelectorAll('.cs').forEach(n=>n.textContent=s);$('#rwrap').hidden=true;rp();ri();esum()};
+
+const tmodes=()=>seg($('#tmode'),[['prop','Proportional'],['eq','Equally']],'tmode',esum);
+const fresh=()=>({cur:S.cur||'USD',title:'',date:new Date().toISOString().slice(0,10),subtotal:'',tax:'',tip:'',discount:'',fees:'',mode:'equal',tmode:'prop',people:[{id:1,name:'',amt:'',pct:''},{id:2,name:'',amt:'',pct:''}],items:[]});
+let tmr=null,loading=false,sv=false,again=false,user=null,curId=null,recov=false,am='in';
+function apply(o){loading=true;Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,o);if(!CUR[S.cur])S.cur='USD';
+uid=1+Math.max(0,...S.people.map(p=>p.id),...S.items.map(i=>i.id));
+document.querySelectorAll('[data-k]').forEach(i=>i.value=S[i.dataset.k]||'');
+$('#cur').value=S.cur;document.querySelectorAll('.cs').forEach(n=>n.textContent=CUR[S.cur].s.trim());
+$('#rwrap').hidden=true;tmodes();modes();rp();ri();esum();loading=false}
+const sb=(SUPABASE_URL&&SUPABASE_KEY&&window.supabase)?supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+function sched(){if(loading||!user||!sb||!active)return;clearTimeout(tmr);$('#st').textContent='';tmr=setTimeout(save,900)}
+async function save(){tmr=null;if(sv){again=true;return}
+if(!(S.title.trim()||S.subtotal||S.items.length)||!R)return;sv=true;
+const row={title:S.title.trim().slice(0,120),data:S,total_cents:R.er.length?null:R.total,currency:S.cur,updated_at:new Date().toISOString()};
+$('#st').style.color='var(--mu)';$('#st').textContent='Saving…';let r;
+if(curId)r=await sb.from('bills').update(row).eq('id',curId);
+else{r=await sb.from('bills').insert(row).select('id').single();if(!r.error)curId=r.data.id}
+$('#st').style.color=r.error?'var(--er)':'var(--ok)';$('#st').textContent=r.error?'Not saved':'Saved ✓';
+sv=false;if(again){again=false;sched()}loadHist()}
+async function flush(){if(tmr){clearTimeout(tmr);await save()}}
+async function loadHist(){if(!user)return;const r=await sb.from('bills').select('id,title,total_cents,currency,updated_at').order('updated_at',{ascending:false}).limit(100);
+const h=$('#hist');if(r.error){h.innerHTML='<p class="err">Couldn’t load history. Try again.</p>';return}
+h.innerHTML=r.data.length?r.data.map(b=>`<div class="h"><button class="o" data-b="${b.id}"${b.id===curId?' style="border-color:var(--ac)" aria-current="true"':''}><b>${esc(b.title||'Untitled bill')}</b><small>${new Date(b.updated_at).toLocaleDateString()} · ${b.total_cents==null?'Incomplete':f$(b.total_cents,b.currency)}</small></button><button aria-label="Delete bill" data-d="${b.id}" style="color:var(--er);width:44px;padding:0">✕</button></div>`).join(''):'<p class="note">No saved bills yet. Your splits appear here automatically.</p>'}
+function openD(o){$('#drawer').classList.toggle('open',o);$('#scrim').hidden=!o;$('#menu').setAttribute('aria-expanded',o);if(o){loadHist();$('#dclose').focus()}else $('#menu').focus()}
+$('#menu').onclick=()=>openD(true);$('#dclose').onclick=$('#scrim').onclick=()=>openD(false);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#drawer').classList.contains('open'))openD(false)});
+$('#new').onclick=async()=>{await flush();curId=null;apply(fresh());$('#st').textContent='';window.scrollTo(0,0);if($('#drawer').classList.contains('open'))openD(false)};
+$('#hist').onclick=async e=>{const b=e.target.closest('button');if(!b)return;await flush();
+if(b.dataset.b){const r=await sb.from('bills').select('data').eq('id',b.dataset.b).single();if(r.error)return;curId=b.dataset.b;apply(r.data.data);$('#st').textContent='';openD(false)}
+else if(b.dataset.d&&confirm('Delete this saved bill? This can’t be undone.')){await sb.from('bills').delete().eq('id',b.dataset.d);if(b.dataset.d===curId){curId=null;apply(fresh())}loadHist()}};
+$('#out').onclick=async()=>{await flush();openD(false);await sb.auth.signOut()};
+const amsg=(t,ok)=>{const e=$('#amsg');e.textContent=t||'';e.style.color=ok?'var(--ok)':'var(--er)'};
+function amode(m){am=m;document.querySelectorAll('#atabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));
+$('#atabs').hidden=$('#emw').hidden=m==='reset';$('#fg').hidden=m!=='in';$('#go').textContent={in:'Sign in',up:'Create account',reset:'Set new password'}[m];
+if(m==='reset'){$('#emform').hidden=false;$('#soc').hidden=true}$('#pw').autocomplete=m==='in'?'current-password':'new-password';amsg('')}
+$('#atabs').onclick=e=>{const b=e.target.closest('button');if(b)amode(b.dataset.m)};
+const back=()=>location.href.split('#')[0];
+$('#soc').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
+if(b.dataset.s==='email'){$('#soc').hidden=true;$('#emform').hidden=false;$('#em').focus();return}
+const r=await sb.auth.signInWithOAuth({provider:b.dataset.s,options:{redirectTo:back()}});if(r.error)amsg(r.error.message)};
+$('#bk').onclick=()=>{$('#emform').hidden=true;$('#soc').hidden=false;amsg('')};
+const PN={week:'Weekly',month:'Monthly',year:'Yearly'},PD={week:'7 days',month:'30 days',year:'365 days'},PLK=['week','month','year'];
+let PRICES={week:50,month:100,year:1000},LAST=null,SUB=null,isAdmin=false,active=false,payPlan=null,pfile=null,atab='pay',USERS=[];
+const rs=n=>'Rs '+Number(n).toLocaleString('en-US'),dt=d=>new Date(d).toLocaleDateString();
+function plansHtml(){let h='';
+if(SUB)h+=`<div class="pl best"><b>Current plan: ${PN[SUB.plan]}</b><div class="note">Active until ${dt(SUB.end)}</div></div>`;
+if(LAST){const st={pending:['Pending verification','Waiting for an admin to check your payment. The result will show here.'],approved:['Approved','Your payment was verified and your plan was activated.'],rejected:['Rejected','Reason: '+esc(LAST.reject_reason||'none given')+'. You can submit a new payment below.']}[LAST.status];
+h+=`<div class="pl"><b>Last payment: ${PN[LAST.plan]} · ${rs(LAST.amount)}</b> <span class="badge">${st[0]}</span><div class="note">${st[1]}</div><div class="note">Submitted ${dt(LAST.created_at)}</div></div>`}
+const pend=LAST&&LAST.status==='pending';
+h+=PLK.map(k=>`<div class="pl${k==='year'?' best':''}"><b>${PN[k]}</b>${k==='year'?' <span class="badge">Best value</span>':''}<div style="font-size:24px;font-weight:700">${rs(PRICES[k])} <span class="note" style="font-size:14px">/ ${PD[k]}</span></div><button class="p" style="width:100%;margin-top:8px" data-pay="${k}"${pend?' disabled':''}>Pay with JazzCash</button></div>`).join('');
+return h+(pend?'<p class="note">You already have a payment pending. Please wait for the admin to review it.</p>':'')}
+$('#vp').onclick=()=>{$('#pb').innerHTML=plansHtml();$('#plans').showModal()};$('#pc').onclick=()=>$('#plans').close();
+const pm=(t,ok)=>{const e=$('#pmsg');e.textContent=t;e.style.color=ok?'var(--ok)':'var(--er)'};
+function openPay(k){payPlan=k;pfile=null;$('#pplan').textContent=`${PN[k]} plan · ${rs(PRICES[k])}`;$('#pamt').textContent=rs(PRICES[k]);
+$('#pem').value=user.email;$('#pdate').value=new Date().toISOString().slice(0,10);$('#pref').value='';$('#pfile').value='';$('#pprev').hidden=true;pm('');$('#psub').disabled=false;
+$('#plans').close();$('#paydlg').showModal()}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-pay]');if(b&&!b.disabled)openPay(b.dataset.pay)});
+$('#pcancel').onclick=()=>$('#paydlg').close();
+$('#pcopy').onclick=async()=>{const n='03296599619';try{await navigator.clipboard.writeText(n)}catch(x){const t=document.createElement('textarea');t.value=n;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}
+$('#pcm').textContent='Copied: '+n;setTimeout(()=>$('#pcm').textContent='',3500)};
+$('#pfile').onchange=e=>{const f=e.target.files[0];pfile=null;$('#pprev').hidden=true;pm('');if(!f)return;
+if(!['image/jpeg','image/png','image/webp'].includes(f.type))return pm('Please choose a JPG, PNG or WebP image.');
+if(f.size>3*1024*1024)return pm('This image is too large. The maximum is 3 MB.');
+pfile=f;$('#pprev').src=URL.createObjectURL(f);$('#pprev').hidden=false};
+$('#psub').onclick=async()=>{const em=$('#pem').value.trim();
+if(!/^\S+@\S+\.\S+$/.test(em))return pm('Enter a valid email address.');if(!$('#pdate').value)return pm('Choose the payment date.');if(!pfile)return pm('Add a screenshot of your payment.');
+$('#psub').disabled=true;pm('Uploading…',1);
+const ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[pfile.type],path=`${user.id}/${crypto.randomUUID()}.${ext}`;
+const u=await sb.storage.from('payment-proofs').upload(path,pfile,{contentType:pfile.type});
+if(u.error){$('#psub').disabled=false;return pm('Upload failed: '+u.error.message)}
+const r=await sb.rpc('submit_payment',{p_plan:payPlan,p_email:em,p_ref:$('#pref').value.trim(),p_date:$('#pdate').value,p_path:path});
+if(r.error){$('#psub').disabled=false;return pm(r.error.message)}
+pm('Submitted. Your payment is now pending verification.',1);await loadPlan();setTimeout(()=>$('#paydlg').close(),1600)};
+async function loadPlan(){const [a,b,c,d]=await Promise.all([sb.from('subscriptions').select('plan,status,current_period_end').maybeSingle(),sb.from('plan_prices').select('plan,price_pkr'),sb.from('payments').select('plan,amount,status,reject_reason,created_at').order('created_at',{ascending:false}).limit(1),sb.rpc('is_admin')]);
+(b.data||[]).forEach(x=>PRICES[x.plan]=x.price_pkr);LAST=(c.data&&c.data[0])||null;isAdmin=d.data===true;
+const x=a.data,ok=!!x&&x.status==='active'&&new Date(x.current_period_end)>new Date();SUB=ok?{plan:x.plan,end:x.current_period_end}:null;active=ok;
+$('#plan').textContent=ok?`Plan: ${PN[x.plan]} · until ${dt(x.current_period_end)}`:x?(x.status==='canceled'?'Access revoked':'Plan expired'):'No active plan';
+$('#adm').hidden=!isAdmin;$('main').hidden=!active;$('#gate').hidden=active;$('#new').hidden=!active;
+if(!active){$('#gb').innerHTML=plansHtml();$('#gnote').innerHTML=SUPPORT_EMAIL?`Need help? <a href="mailto:${SUPPORT_EMAIL}">Email ${SUPPORT_EMAIL}</a>.`:''}}
+$('#gb').onclick=()=>{};
+// ---------- Admin panel (every action is re-checked by the database) ----------
+const am_=(t,ok)=>{const e=$('#am');e.textContent=t||'';e.style.color=ok?'var(--ok)':'var(--er)'};
+const payCard=(p,u)=>`<div class="pl"><b>${esc(p.email)}</b> <span class="badge">${p.status}</span><div class="note">${PN[p.plan]} · ${rs(p.amount)} · paid ${p.paid_on} · ref ${esc(p.reference||'none')}</div><div class="note">Submitted ${new Date(p.created_at).toLocaleString()}${p.reject_reason?' · Rejected: '+esc(p.reject_reason):''}</div>${u?`<a href="${u}" target="_blank" rel="noopener"><img src="${u}" alt="Payment screenshot" style="max-width:100%;max-height:180px;margin-top:8px;border-radius:8px"></a>`:''}${p.status==='pending'?`<input placeholder="Reason (required to reject)" id="rr${p.id}" maxlength="300" style="margin-top:8px"><div class="acts"><button class="p" data-ap="${p.id}">Approve</button><button data-rj="${p.id}" style="color:var(--er)">Reject</button></div>`:''}</div>`;
+function ulist(){const q=($('#usq')?$('#usq').value:'').toLowerCase();
+$('#ul').innerHTML=USERS.filter(u=>u.email.toLowerCase().includes(q)).map(u=>{const on=u.status==='active'&&new Date(u.current_period_end)>new Date();
+return `<div class="pl"><b>${esc(u.email)}</b> <span class="badge">${on?'Active':u.status==='canceled'?'Revoked':u.plan?'Expired':'No plan'}</span><div class="note">Joined ${dt(u.created_at)}${u.plan?' · '+PN[u.plan]+' until '+dt(u.current_period_end):''}</div><div class="row" style="margin-top:8px"><select id="up_${u.user_id}" aria-label="Plan">${PLK.map(k=>`<option value="${k}"${u.plan===k?' selected':''}>${PN[k]}</option>`).join('')}</select><input type="date" id="ud_${u.user_id}" aria-label="Access until" value="${u.current_period_end?u.current_period_end.slice(0,10):''}"></div><div class="acts"><button class="p" data-sa="${u.user_id}">Activate / update</button>${u.plan?`<button data-rv="${u.user_id}" style="color:var(--er)">Revoke</button>`:''}</div></div>`}).join('')||'<p class="note">No users found.</p>'}
+async function adminLoad(){const b=$('#ab');b.innerHTML='<p class="note">Loading…</p>';let r;
+if(atab==='pay'){r=await sb.from('payments').select('*').order('created_at',{ascending:false}).limit(100);if(r.error)return b.innerHTML=`<p class="err">${esc(r.error.message)}</p>`;
+const us=await Promise.all(r.data.map(p=>sb.storage.from('payment-proofs').createSignedUrl(p.screenshot_path,600)));
+b.innerHTML=r.data.length?r.data.map((p,i)=>payCard(p,us[i].data&&us[i].data.signedUrl)).join(''):'<p class="note">No payments yet.</p>'}
+else if(atab==='users'){r=await sb.rpc('admin_list_users');if(r.error)return b.innerHTML=`<p class="err">${esc(r.error.message)}</p>`;USERS=r.data;
+b.innerHTML='<input id="usq" placeholder="Search by email" aria-label="Search users" style="margin-bottom:10px"><div id="ul"></div>';ulist()}
+else if(atab==='prices'){b.innerHTML=PLK.map(k=>`<div class="row"><label style="flex:1;margin:0" for="pr_${k}">${PN[k]} (${PD[k]}), Rs</label><input id="pr_${k}" inputmode="numeric" value="${PRICES[k]}" style="max-width:110px"><button data-sp="${k}">Save</button></div>`).join('')+'<p class="note">New prices apply to new payments. A payment already submitted keeps the price it was submitted with.</p>'}
+else{r=await sb.from('audit_log').select('*').order('at',{ascending:false}).limit(100);if(r.error)return b.innerHTML=`<p class="err">${esc(r.error.message)}</p>`;
+b.innerHTML=r.data.map(a=>`<div class="pl"><b>${esc(a.action)}</b><div class="note">${new Date(a.at).toLocaleString()} · by ${esc(a.actor_email||'system')}${a.target_email?' · for '+esc(a.target_email):''}</div><div class="note">${esc(JSON.stringify(a.details||{}))}</div></div>`).join('')||'<p class="note">No history yet.</p>'}}
+$('#adm').onclick=()=>{openD(false);atab='pay';document.querySelectorAll('#atab2 button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.t==='pay'));am_('');$('#admdlg').showModal();adminLoad()};
+$('#acl').onclick=()=>$('#admdlg').close();
+$('#atab2').onclick=e=>{const b=e.target.closest('button');if(!b)return;atab=b.dataset.t;document.querySelectorAll('#atab2 button').forEach(x=>x.setAttribute('aria-pressed',x===b));am_('');adminLoad()};
+$('#ab').oninput=e=>{if(e.target.id==='usq')ulist()};
+$('#ab').onclick=async e=>{const b=e.target.closest('button'),d=b&&b.dataset;if(!b)return;let r,ok='Done.';b.disabled=true;
+if(d.ap){if(!confirm('Approve this payment and activate the plan? Only do this after you have seen the money in your JazzCash account.')){b.disabled=false;return}
+r=await sb.rpc('admin_review_payment',{p_id:d.ap,p_approve:true,p_reason:null});ok='Payment approved. Plan activated.'}
+else if(d.rj){r=await sb.rpc('admin_review_payment',{p_id:d.rj,p_approve:false,p_reason:$('#rr'+d.rj).value});ok='Payment rejected.'}
+else if(d.sa){const k=$('#up_'+d.sa).value;let v=$('#ud_'+d.sa).value;if(!v){const t=new Date();t.setDate(t.getDate()+({week:7,month:30,year:365})[k]);v=t.toISOString().slice(0,10)}
+r=await sb.rpc('admin_set_access',{p_user:d.sa,p_plan:k,p_ends:v+'T23:59:59Z',p_status:'active'});ok='Access updated.'}
+else if(d.rv){if(!confirm('Revoke this user’s access now?')){b.disabled=false;return}const u=USERS.find(x=>x.user_id===d.rv);
+r=await sb.rpc('admin_set_access',{p_user:d.rv,p_plan:u.plan,p_ends:u.current_period_end,p_status:'canceled'});ok='Access revoked.'}
+else if(d.sp){const v=parseInt($('#pr_'+d.sp).value,10);r=await sb.rpc('admin_set_price',{p_plan:d.sp,p_price:v});if(!r.error)PRICES[d.sp]=v;ok='Price saved.'}
+else{b.disabled=false;return}
+b.disabled=false;if(r.error)return am_(r.error.message);am_(ok,1);adminLoad()};
+$('#go').onclick=async()=>{const em=$('#em').value.trim(),pw=$('#pw').value;
+if(am!=='reset'&&!/^\S+@\S+\.\S+$/.test(em))return amsg('Enter a valid email address.');
+if(!pw)return amsg('Enter your password.');if(am!=='in'&&pw.length<8)return amsg('Use a password with at least 8 characters.');
+$('#go').disabled=true;let r;
+if(am==='in')r=await sb.auth.signInWithPassword({email:em,password:pw});
+else if(am==='up')r=await sb.auth.signUp({email:em,password:pw,options:{emailRedirectTo:back()}});
+else r=await sb.auth.updateUser({password:pw});
+$('#go').disabled=false;if(r.error)return amsg(r.error.message);
+if(am==='up'&&!r.data.session)return amsg('Almost done. Check your email and click the confirmation link, then sign in.',1);
+if(am==='reset'){recov=false;const g=await sb.auth.getSession();route(g.data.session)}};
+$('#fg').onclick=async()=>{const em=$('#em').value.trim();if(!em)return amsg('Type your email above first.');
+const r=await sb.auth.resetPasswordForEmail(em,{redirectTo:back()});amsg(r.error?r.error.message:'If that email has an account, a reset link is on its way.',!r.error)};
+function route(ses){user=ses?ses.user:null;const show=!!user&&!recov;$('#auth').hidden=show;$('#app').hidden=!show;
+if(show){$('main').hidden=true;$('#gate').hidden=true;active=false;$('#who').textContent='Signed in as '+user.email;setTimeout(()=>{loadHist();loadPlan()},0)}
+else if(!user){curId=null;apply(fresh());$('#hist').innerHTML='';$('#pw').value='';$('#emform').hidden=true;$('#soc').hidden=false}}
+if(!sb){$('#auth').hidden=false;$('#abox').innerHTML='<p><b>Setup needed.</b> Add your Supabase URL and key at the top of this file (see the setup guide), then reload.</p>'}
+else sb.auth.onAuthStateChange((ev,ses)=>{if(ev==='PASSWORD_RECOVERY'){recov=true;amode('reset')}route(ses)});
+apply(fresh());
+</script></body></html>
