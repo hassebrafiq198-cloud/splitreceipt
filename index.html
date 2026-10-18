@@ -58,6 +58,7 @@ a.btn{display:block;text-align:center;text-decoration:none;margin-top:8px;paddin
 <div id="app" hidden>
 <header class="top"><button id="menu" aria-label="Open bill history" aria-expanded="false">☰</button><b>SplitReceipt</b><span class="st" id="st" role="status"></span><button class="p" id="new">+ New</button></header>
 <aside id="drawer" aria-label="Bill history"><div class="row"><b style="flex:1">History</b><button id="dclose" aria-label="Close history">✕</button></div><p class="note" id="who"></p><div class="note" id="plan"></div><button id="vp" style="width:100%;margin:8px 0 12px">View plans</button><div id="hist"></div><button id="out" style="width:100%;margin-top:12px">Sign out</button></aside><div id="scrim" hidden></div>
+<div id="gate" hidden style="max-width:640px;margin:0 auto;padding:24px 16px"><h1>Choose a plan to start</h1><p class="sub">SplitReceipt is a paid service. Pick a plan to unlock bill splitting, saved history and receipts.</p><div id="gb"></div><p class="note" id="gnote"></p></div>
 <main>
 <h1>Split the bill</h1><p class="sub">Enter the bill, add people, and get a clean receipt. Your bills save to your account automatically.</p>
 
@@ -91,12 +92,11 @@ a.btn{display:block;text-align:center;text-decoration:none;margin-top:8px;paddin
 <p class="note">If a download is blocked in your browser, press and hold the image to save it. This receipt is a split summary only. It does not confirm any payment.</p></div></section>
 </main></div>
 <dialog id="plans" aria-labelledby="pt"><h2 id="pt">Choose a plan</h2><div id="pb"></div><button id="pc" style="width:100%;margin-top:6px">Close</button></dialog>
+<script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
-// ---- Paste your Supabase values between the quotes (see setup guide) ----
-const SUPABASE_URL='https://mryjpjmkfutejyjmoajn.supabase.co',SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yeWpwam1rZnV0ZWp5am1vYWpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzMzA5MjgsImV4cCI6MjEwNzkwNjkyOH0.n1pp3iM_K3U9zBppjSbVrcPw8YXbn7jc8q8skoO6VvY';
-// Payment links: paste a checkout link from your payment provider for each plan. Empty = "Coming soon".
-const CHECKOUT={week:'',month:'',year:''};
+const {SUPABASE_URL='',SUPABASE_KEY='',SUPPORT_EMAIL='',CHECKOUT={week:'',month:'',year:''}}=window.CFG||{};
+
 const $=s=>document.querySelector(s);let uid=1;
 const CUR={USD:{s:'$'},PKR:{s:'Rs '},EUR:{s:'€'},GBP:{s:'£'},INR:{s:'₹'},AED:{s:'AED '},SAR:{s:'SAR '},CAD:{s:'CA$'},AUD:{s:'A$'}};
 const S={cur:'USD',title:'',date:'',subtotal:'',tax:'',tip:'',discount:'',fees:'',mode:'equal',tmode:'prop',people:[],items:[]};
@@ -191,7 +191,7 @@ document.querySelectorAll('[data-k]').forEach(i=>i.value=S[i.dataset.k]||'');
 $('#cur').value=S.cur;document.querySelectorAll('.cs').forEach(n=>n.textContent=CUR[S.cur].s.trim());
 $('#rwrap').hidden=true;tmodes();modes();rp();ri();esum();loading=false}
 const sb=(SUPABASE_URL&&SUPABASE_KEY&&window.supabase)?supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
-function sched(){if(loading||!user||!sb)return;clearTimeout(tmr);$('#st').textContent='';tmr=setTimeout(save,900)}
+function sched(){if(loading||!user||!sb||!active)return;clearTimeout(tmr);$('#st').textContent='';tmr=setTimeout(save,900)}
 async function save(){tmr=null;if(sv){again=true;return}
 if(!(S.title.trim()||S.subtotal||S.items.length)||!R)return;sv=true;
 const row={title:S.title.trim().slice(0,120),data:S,total_cents:R.er.length?null:R.total,currency:S.cur,updated_at:new Date().toISOString()};
@@ -226,9 +226,12 @@ const PLANS=[{k:'week',n:'Starter',p:50,per:'week',d:'Full access for 7 days'},{
 function plansHtml(){const live=PLANS.some(x=>CHECKOUT[x.k]);
 return (live?'':'<p class="note" style="margin:0 0 8px">Payments aren’t switched on yet, so these plans are a preview.</p>')+PLANS.map(x=>`<div class="pl${x.best?' best':''}"><b>${x.n}</b>${x.best?' <span class="badge">Best value</span>':''}<div style="font-size:24px;font-weight:700">Rs ${x.p.toLocaleString('en-US')} <span class="note" style="font-size:14px">/ ${x.per}</span></div><div class="note">${x.d}</div>${CHECKOUT[x.k]?`<a class="btn" href="${CHECKOUT[x.k]}" target="_blank" rel="noopener">Choose ${x.n}</a>`:'<button disabled style="width:100%;margin-top:8px">Coming soon</button>'}</div>`).join('')}
 $('#vp').onclick=()=>{$('#pb').innerHTML=plansHtml();$('#plans').showModal()};$('#pc').onclick=()=>$('#plans').close();
+let active=false;
 async function loadPlan(){const r=await sb.from('subscriptions').select('plan,status,current_period_end').maybeSingle();const d=r.data;
 const ok=d&&d.status==='active'&&new Date(d.current_period_end)>new Date();const pl=ok&&PLANS.find(x=>x.k===d.plan);
-$('#plan').textContent=pl?`Plan: ${pl.n} · until ${new Date(d.current_period_end).toLocaleDateString()}`:'Plan: Free'}
+active=!!pl;$('#plan').textContent=pl?`Plan: ${pl.n} · until ${new Date(d.current_period_end).toLocaleDateString()}`:'No active plan';
+$('main').hidden=!active;$('#gate').hidden=active;$('#new').hidden=!active;
+if(!active){$('#gb').innerHTML=plansHtml();$('#gnote').innerHTML=SUPPORT_EMAIL?`Already paid, or need access? <a href="mailto:${SUPPORT_EMAIL}">Email ${SUPPORT_EMAIL}</a>.`:''}}
 $('#go').onclick=async()=>{const em=$('#em').value.trim(),pw=$('#pw').value;
 if(am!=='reset'&&!/^\S+@\S+\.\S+$/.test(em))return amsg('Enter a valid email address.');
 if(!pw)return amsg('Enter your password.');if(am!=='in'&&pw.length<8)return amsg('Use a password with at least 8 characters.');
@@ -242,7 +245,7 @@ if(am==='reset'){recov=false;const g=await sb.auth.getSession();route(g.data.ses
 $('#fg').onclick=async()=>{const em=$('#em').value.trim();if(!em)return amsg('Type your email above first.');
 const r=await sb.auth.resetPasswordForEmail(em,{redirectTo:back()});amsg(r.error?r.error.message:'If that email has an account, a reset link is on its way.',!r.error)};
 function route(ses){user=ses?ses.user:null;const show=!!user&&!recov;$('#auth').hidden=show;$('#app').hidden=!show;
-if(show){$('#who').textContent='Signed in as '+user.email;setTimeout(()=>{loadHist();loadPlan()},0)}
+if(show){$('main').hidden=true;$('#gate').hidden=true;active=false;$('#who').textContent='Signed in as '+user.email;setTimeout(()=>{loadHist();loadPlan()},0)}
 else if(!user){curId=null;apply(fresh());$('#hist').innerHTML='';$('#pw').value='';$('#emform').hidden=true;$('#soc').hidden=false}}
 if(!sb){$('#auth').hidden=false;$('#abox').innerHTML='<p><b>Setup needed.</b> Add your Supabase URL and key at the top of this file (see the setup guide), then reload.</p>'}
 else sb.auth.onAuthStateChange((ev,ses)=>{if(ev==='PASSWORD_RECOVERY'){recov=true;amode('reset')}route(ses)});
